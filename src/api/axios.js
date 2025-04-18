@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api/tasks'; 
+const API_BASE_URL = 'http://localhost:8080/api/tasks';   
 
 // Fetch all tasks
 export const fetchTasks = async () => {
@@ -26,12 +26,12 @@ export const deleteTask = async (taskId) => {
   return response.data;
 };
 
+//Filter by status/assignee
+export const fetchFilteredTasks = (status, assignee) => {
+  const params = {};
+  if (status) params.status = status;
+  if (assignee) params.assignee = assignee;
 
-// const axiosInstance = axios.create({
-//   baseURL: 'http://localhost:8080',  // Your backend API URL
-//   withCredentials: true,  // Send cookies with every request (important for session-based auth)
-//   headers: {
-//     'Content-Type': 'application/json',
-//   },
-// });
+  return axios.get(`${API_BASE_URL}/filter`, { params });
+};
 

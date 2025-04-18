@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
     AppBar, Toolbar, Typography, Button, Container,
     Table, TableBody, TableCell, TableHead, TableRow,
-    Paper, IconButton
+    Paper, IconButton, TextField, MenuItem
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -13,7 +13,8 @@ import {
     fetchTasks,
     addTask,
     updateTask,
-    deleteTask
+    deleteTask,
+    fetchFilteredTasks
 } from '../api/axios'
 
 const TasksPage = () => {
@@ -21,6 +22,11 @@ const TasksPage = () => {
     const [currentTask, setCurrentTask] = useState(null);
     const [openAddDialog, setOpenAddDialog] = useState(false);
     const [openEditDialog, setOpenEditDialog] = useState(false);
+
+    const [statusFilter, setStatusFilter] = useState('');
+    const [assigneeFilter, setAssigneeFilter] = useState('');
+
+    const statusOptions = ['TODO', 'IN_PROGRESS', 'DONE'];
 
     useEffect(() => {
         const loadTasks = async () => {
@@ -83,6 +89,17 @@ const TasksPage = () => {
         }
     };
 
+    const handleFilter = async () => {
+        // console.log(statusFilter, assigneeFilter)
+        try {
+            const response = await fetchFilteredTasks(statusFilter, assigneeFilter);
+            setTasks(response.data);
+            // console.log(response.data)
+        } catch (err) {
+            console.error('Failed to fetch filtered tasks', err);
+        }
+    };
+
     return (
         <>
             <AppBar position="static">
@@ -95,6 +112,29 @@ const TasksPage = () => {
                 <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddDialog}>
                     Add Task
                 </Button>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', alignItems: 'center' }}>
+                    <TextField
+                        select
+                        label="Status"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        sx={{ width: 200 }}
+                    >
+                        <MenuItem value="">All</MenuItem>
+                        {statusOptions.map(status => (
+                            <MenuItem key={status} value={status}>{status}</MenuItem>
+                        ))}
+                    </TextField>
+
+                    <TextField
+                        label="Assignee"
+                        value={assigneeFilter}
+                        onChange={(e) => setAssigneeFilter(e.target.value)}
+                        sx={{ width: 250 }}
+                    />
+
+                    <Button variant="contained" onClick={handleFilter}>Apply Filters</Button>
+                </div>
                 <Paper sx={{ marginTop: 2 }}>
                     <Table>
                         <TableHead>
