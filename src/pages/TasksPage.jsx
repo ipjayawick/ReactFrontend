@@ -7,8 +7,8 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import AddTaskDialog from '../components/AddTasksDialog';
-import EditTaskDialog from '../components/EditTasksDialog';
+import AddTaskDialog from '../routes/AddTasksDialog';
+import EditTaskDialog from '../routes/EditTasksDialog';
 import {
     fetchTasks,
     addTask,
@@ -90,11 +90,9 @@ const TasksPage = () => {
     };
 
     const handleFilter = async () => {
-        // console.log(statusFilter, assigneeFilter)
         try {
             const response = await fetchFilteredTasks(statusFilter, assigneeFilter);
             setTasks(response.data);
-            // console.log(response.data)
         } catch (err) {
             console.error('Failed to fetch filtered tasks', err);
         }
@@ -168,7 +166,6 @@ const TasksPage = () => {
                 </Paper>
             </Container>
 
-            {/* Dialogs */}
             {currentTask && (
                 <>
                     <AddTaskDialog
