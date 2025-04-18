@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api/tasks';   
+const API_BASE_URL = 'http://localhost:8080/api/tasks';
 
 // Fetch all tasks
 export const fetchTasks = async () => {
