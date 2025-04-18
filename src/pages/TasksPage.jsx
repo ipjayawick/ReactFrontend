@@ -1,77 +1,101 @@
-import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Typography, Button, Container, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogActions, DialogContent, DialogTitle, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import {
+    AppBar, Toolbar, Typography, Button, Container,
+    Table, TableBody, TableCell, TableHead, TableRow,
+    Paper, IconButton
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import AddTaskDialog from '../components/AddTasksDialog';
+import EditTaskDialog from '../components/EditTasksDialog';
+import {
+    fetchTasks,
+    addTask,
+    updateTask,
+    deleteTask
+} from '../api/axios'
 
 const TasksPage = () => {
-    // const [tasks, setTasks] = useState([]);
-    const tasks = [
-        { id: 1, title: 'Complete the project', description: 'Finish the backend and frontend implementations', status: 'TODO', assignee: 'john.doe@example.com', createdAt: '2025-04-18T10:15:30', updatedAt: '2025-04-18T10:15:30' },
-        { id: 2, title: 'Write tests', description: 'Add unit and integration tests for the task service', status: 'IN_PROGRESS', assignee: 'jane.doe@example.com', createdAt: '2025-04-19T11:00:00', updatedAt: '2025-04-19T12:00:00' },
-    ]
-    const [openDialog, setOpenDialog] = useState(false);
+    const [tasks, setTasks] = useState([]);
     const [currentTask, setCurrentTask] = useState(null);
-    const [isEditing, setIsEditing] = useState(false);
+    const [openAddDialog, setOpenAddDialog] = useState(false);
+    const [openEditDialog, setOpenEditDialog] = useState(false);
 
-    // useEffect(() => {
-    //     // Fetch tasks from your API (replace with actual fetch logic)
-    //     fetchTasks();
-    // }, []);
+    useEffect(() => {
+        const loadTasks = async () => {
+            try {
+                const data = await fetchTasks();
+                setTasks(data);
+            } catch (error) {
+                console.error('Error fetching tasks:', error);
+            }
+        };
+        loadTasks();
+    }, []);
 
-    // const fetchTasks = () => {
-    //     // Replace this with your API call to fetch tasks
-    //     setTasks([
-    //         { id: 1, title: 'Complete the project', status: 'TODO', assignee: 'john.doe@example.com', createdAt: '2025-04-18T10:15:30', updatedAt: '2025-04-18T10:15:30' },
-    //         { id: 2, title: 'Write tests', status: 'IN_PROGRESS', assignee: 'jane.doe@example.com', createdAt: '2025-04-19T11:00:00', updatedAt: '2025-04-19T12:00:00' },
-    //     ]);
-    // };
-
-    const handleOpenDialog = (task) => {
-        // console.log(task)
-        setCurrentTask(task || { title: '', description: '', status: 'TODO', assignee: '' });
-        console.log(currentTask)
-        // setIsEditing(!!task);
-        setOpenDialog(true);
+    const handleOpenAddDialog = () => {
+        setCurrentTask({
+            title: '',
+            description: '',
+            status: 'TODO',
+            assignee: ''
+        });
+        setOpenAddDialog(true);
     };
 
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
+    const handleOpenEditDialog = (task) => {
+        setCurrentTask(task);
+        setOpenEditDialog(true);
     };
 
-    const handleSubmitTask = (e) => {
+    const handleCloseAddDialog = () => setOpenAddDialog(false);
+    const handleCloseEditDialog = () => setOpenEditDialog(false);
+
+    const handleAddTask = async (e) => {
         e.preventDefault();
-        // Handle task submission (add or update logic here)
-        setOpenDialog(false);
-        fetchTasks(); // Refresh task list after submission
+        try {
+            const newTask = await addTask(currentTask);
+            setTasks([...tasks, newTask]);
+            handleCloseAddDialog();
+        } catch (error) {
+            console.error('Error adding task:', error);
+        }
     };
 
-    const handleLogout = () => {
-        // Logic for logging out the user
-        history.push('/login');
+    const handleUpdateTask = async (e) => {
+        e.preventDefault();
+        try {
+            const updated = await updateTask(currentTask.id, currentTask);
+            setTasks(tasks.map(task => (task.id === updated.id ? updated : task)));
+            handleCloseEditDialog();
+        } catch (error) {
+            console.error('Error updating task:', error);
+        }
     };
 
-    const handleDeleteTask = (taskId) => {
-        // Handle task deletion (replace with actual delete logic)
-        setTasks(tasks.filter(task => task.id !== taskId));
+    const handleDeleteTask = async (id) => {
+        try {
+            await deleteTask(id);
+            setTasks(tasks.filter(task => task.id !== id));
+        } catch (error) {
+            console.error('Error deleting task:', error);
+        }
     };
 
     return (
-        <div>
-            {/* Navbar */}
+        <>
             <AppBar position="static">
                 <Toolbar>
-                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                        Task Manager
-                    </Typography>
-                    <Button color="inherit" onClick={handleLogout}>Logout</Button>
+                    <Typography variant="h6" sx={{ flexGrow: 1 }}>Task Manager</Typography>
+                    <Button color="inherit">Login</Button>
                 </Toolbar>
             </AppBar>
-
-            <Container>
-                {/* Tasks Table */}
-                <Button variant="contained" color="primary" sx={{ marginTop: 2 }} onClick={() => handleOpenDialog()}>
+            <Container sx={{ marginTop: 4 }}>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddDialog}>
                     Add Task
                 </Button>
-
-                <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+                <Paper sx={{ marginTop: 2 }}>
                     <Table>
                         <TableHead>
                             <TableRow>
@@ -79,80 +103,51 @@ const TasksPage = () => {
                                 <TableCell>Description</TableCell>
                                 <TableCell>Status</TableCell>
                                 <TableCell>Assignee</TableCell>
+                                <TableCell>Created At</TableCell>
+                                <TableCell>Updated At</TableCell>
                                 <TableCell>Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {tasks.map((task) => (
+                            {tasks.map(task => (
                                 <TableRow key={task.id}>
                                     <TableCell>{task.title}</TableCell>
                                     <TableCell>{task.description}</TableCell>
                                     <TableCell>{task.status}</TableCell>
                                     <TableCell>{task.assignee}</TableCell>
+                                    <TableCell>{new Date(task.createdAt).toLocaleString()}</TableCell>
+                                    <TableCell>{new Date(task.updatedAt).toLocaleString()}</TableCell>
                                     <TableCell>
-                                        <Button variant="contained" color="secondary" onClick={() => handleOpenDialog(task)}>Edit</Button>
-                                        <Button variant="contained" color="error" sx={{ marginLeft: 1 }} onClick={() => handleDeleteTask(task.id)}>Delete</Button>
+                                        <IconButton onClick={() => handleOpenEditDialog(task)}><EditIcon /></IconButton>
+                                        <IconButton onClick={() => handleDeleteTask(task.id)}><DeleteIcon /></IconButton>
                                     </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
-                </TableContainer>
-
-                {/* Dialog for Adding/Editing Task */}
-                {currentTask && (
-                    <Dialog open={openDialog} onClose={handleCloseDialog}>
-                        <DialogTitle>{isEditing ? 'Edit Task' : 'Add Task'}</DialogTitle>
-                        <DialogContent>
-                            <form onSubmit={handleSubmitTask}>
-                                <TextField
-                                    fullWidth
-                                    label="Title"
-                                    value={currentTask.title}
-                                    onChange={(e) => setCurrentTask({ ...currentTask, title: e.target.value })}
-                                    required
-                                    sx={{ marginBottom: 2 }}
-                                />
-                                <TextField
-                                    fullWidth
-                                    label="Description"
-                                    value={currentTask.description}
-                                    onChange={(e) => setCurrentTask({ ...currentTask, description: e.target.value })}
-                                    required
-                                    sx={{ marginBottom: 2 }}
-                                />
-                                <TextField
-                                    fullWidth
-                                    label="Assignee"
-                                    value={currentTask.assignee}
-                                    onChange={(e) => setCurrentTask({ ...currentTask, assignee: e.target.value })}
-                                    required
-                                    sx={{ marginBottom: 2 }}
-                                />
-                                <FormControl fullWidth required sx={{ marginBottom: 2 }}>
-                                    <InputLabel>Status</InputLabel>
-                                    <Select
-                                        value={currentTask.status}
-                                        label="Status"
-                                        onChange={(e) => setCurrentTask({ ...currentTask, status: e.target.value })}
-                                    >
-                                        <MenuItem value="TODO">To Do</MenuItem>
-                                        <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
-                                        <MenuItem value="DONE">Done</MenuItem>
-                                    </Select>
-                                </FormControl>
-                                <DialogActions>
-                                    <Button onClick={handleCloseDialog}>Cancel</Button>
-                                    <Button type="submit" variant="contained" color="primary">
-                                        {isEditing ? 'Update' : 'Add'}
-                                    </Button>
-                                </DialogActions>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
-                )}
+                </Paper>
             </Container>
-        </div>
+
+            {/* Dialogs */}
+            {currentTask && (
+                <>
+                    <AddTaskDialog
+                        open={openAddDialog}
+                        onClose={handleCloseAddDialog}
+                        task={currentTask}
+                        setTask={setCurrentTask}
+                        onSubmit={handleAddTask}
+                    />
+                    <EditTaskDialog
+                        open={openEditDialog}
+                        onClose={handleCloseEditDialog}
+                        task={currentTask}
+                        setTask={setCurrentTask}
+                        onSubmit={handleUpdateTask}
+                    />
+                </>
+            )}
+        </>
     );
 };
 
