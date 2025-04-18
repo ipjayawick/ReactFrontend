@@ -7,8 +7,8 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import AddTaskDialog from '../routes/AddTasksDialog';
-import EditTaskDialog from '../routes/EditTasksDialog';
+import AddTaskDialog from '../components/AddTasksDialog';
+import EditTaskDialog from '../components/EditTasksDialog';
 import {
     fetchTasks,
     addTask,
